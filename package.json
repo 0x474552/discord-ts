@@ -1,5 +1,6 @@
 {
-  "name": "my-discord-bot",
+  "name": "my-discord-bot-in-typescript",
+  "author": "0x474552",
   "version": "1.0.0",
   "description": "A Discord.js bot built with TypeScript",
   "main": "dist/index.js",
