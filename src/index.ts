@@ -1,73 +1,55 @@
-/**
- * Bot entry point.
- * Loads environment variables, initializes the Discord client,
- * loads commands and events, then logs in.
- */
-import "dotenv/config";
-import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
-import type { BotClient } from "./types";
-import { log } from "./utils/logger";
-import { loadConfig } from "./utils/config";
-import { loadCommands } from "./handlers/CommandHandler";
-/**
- * import { registerSlashCommands } from "./handlers/CommandHandler";
- * This is removed so it doesnt register commands for every startup by default.
- * This is kept as a separate cmd npm run register as this is just boilerplate codes.
- */ 
-
-import { loadEvents } from "./handlers/EventHandler";
+import 'dotenv/config';
+import { Client, Collection, GatewayIntentBits } from 'discord.js';
+import type { BotClient } from './types';
+import { configManager } from './config/ConfigManager';
+import { isDatabaseEnabled, mainDb } from './database';
+import { loadCommands } from './handlers/CommandHandler';
+import { loadEvents } from './handlers/EventHandler';
+import { log } from './utils/logger';
 
 async function main(): Promise<void> {
-  log.info("Booting...", "startup");
-
-  // Load configuration from config.json
-  const config = loadConfig();
-
-  // Map string intents to GatewayIntentBits values
-  const intents = config.intents.map(
-    (name) => GatewayIntentBits[name as keyof typeof GatewayIntentBits],
-  );
-
-  // Map string partials to Partials values
-  const partials = config.partials.map(
-    (name) => Partials[name as keyof typeof Partials],
-  );
-
-  // Build the client with intents and partials from config
+  // Keep the starter client intentionally small. Add more intents only when a
+  // new feature truly needs them.
   const client = new Client({
-    intents,
-    partials,
+    intents: [GatewayIntentBits.Guilds],
   }) as BotClient;
 
   client.commands = new Collection();
-  client.cooldowns = new Collection();
 
-  // Load handlers
+  if (isDatabaseEnabled() && mainDb) {
+    await mainDb.connect();
+  }
+
   await loadCommands(client);
   await loadEvents(client);
 
-  // Log in to Discord
-  const token = process.env.DISCORD_TOKEN;
-  if (!token) {
-    log.error("DISCORD_TOKEN is not set in .env", "startup");
-    process.exit(1);
-  }
+  process.on('unhandledRejection', (error) => {
+    log.error(`Unhandled rejection: ${String(error)}`, 'process');
+  });
 
-  await client.login(token);
+  process.on('uncaughtException', (error) => {
+    log.error(`Uncaught exception: ${(error as Error).message}`, 'process');
+  });
+
+  // Graceful shutdown becomes important as soon as you add a database or any
+  // long-lived service to the starter.
+  const shutdown = async (): Promise<void> => {
+    await mainDb?.close().catch(() => undefined);
+    client.destroy();
+  };
+
+  process.on('SIGINT', () => {
+    void shutdown().finally(() => process.exit(0));
+  });
+
+  process.on('SIGTERM', () => {
+    void shutdown().finally(() => process.exit(0));
+  });
+
+  await client.login(configManager.env('DISCORD_TOKEN', true));
 }
 
-main().catch((err) => {
-  log.error(`Fatal startup error: ${(err as Error).message}`, "startup");
+void main().catch((error) => {
+  log.error(`Startup failed: ${(error as Error).message}`, 'startup');
   process.exit(1);
-});
-
-// ── Graceful Shutdown ──────────────────────────────────────────
-process.on("SIGINT", () => {
-  log.info("Shutting down gracefully (SIGINT)...", "shutdown");
-  process.exit(0);
-});
-
-process.on("SIGTERM", () => {
-  log.info("Shutting down gracefully (SIGTERM)...", "shutdown");
-  process.exit(0);
 });
