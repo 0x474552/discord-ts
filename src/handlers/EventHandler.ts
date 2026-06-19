@@ -1,38 +1,34 @@
-import { readdirSync } from 'fs';
-import { join } from 'path';
-import type { BotClient, BotEvent } from '../types';
+import type { ClientEvents } from 'discord.js';
+import type { AnyBotEvent, BotClient } from '../types';
+import { eventRegistry } from '../events';
 import { log } from '../utils/logger';
 
-/**
- * Loads all event files from the events directory and registers them on the client.
- * Files should export a BotEvent object as default.
- */
+type RuntimeEvent = {
+  name: keyof ClientEvents;
+  once?: boolean;
+  execute: (client: BotClient, ...args: unknown[]) => Promise<void> | void;
+};
+
 export async function loadEvents(client: BotClient): Promise<void> {
-  const eventsPath = join(__dirname, '..', 'events');
-  const eventFiles = readdirSync(eventsPath).filter(
-    (file) => file.endsWith('.ts') || file.endsWith('.js'),
-  );
+  /**
+   * Events are loaded from a source registry for the same reason as commands:
+   * predictable bundling and a very small /dist output.
+   */
+  for (const event of eventRegistry) {
+    // We keep strong typing in each event module, then widen slightly here so
+    // one generic runtime loader can attach every event shape.
+    const typedEvent = event as AnyBotEvent as RuntimeEvent;
+    const handler = (...args: unknown[]) =>
+      Promise.resolve(typedEvent.execute(client, ...args)).catch((error: Error) =>
+        log.error(`${typedEvent.name}: ${error.message}`, 'events'),
+      );
 
-  for (const file of eventFiles) {
-    try {
-      const eventModule = await import(join(eventsPath, file));
-      const event: BotEvent = eventModule.default ?? eventModule;
-
-      if (!event || !event.name || !event.execute) {
-        log.warn(`Skipped "${file}": missing name or execute function`, 'events');
-        continue;
-      }
-
-      /* Register the event — spread args so the client passes them naturally. */
-      if (event.once) {
-        client.once(event.name, (...args: unknown[]) => event.execute(...args, client));
-      } else {
-        client.on(event.name, (...args: unknown[]) => event.execute(...args, client));
-      }
-
-      log.info(`Loaded event: ${event.name}`, 'events');
-    } catch (err) {
-      log.error(`Failed to load event "${file}": ${(err as Error).message}`, 'events');
+    if (typedEvent.once) {
+      client.once(typedEvent.name, handler as (...args: any[]) => void);
+    } else {
+      client.on(typedEvent.name, handler as (...args: any[]) => void);
     }
+
+    log.success(`Loaded event: ${typedEvent.name}`, 'events');
   }
 }

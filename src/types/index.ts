@@ -1,14 +1,21 @@
 import type {
+  ChatInputCommandInteraction,
+  Client,
+  ClientEvents,
+  Collection,
+  PermissionResolvable,
   SlashCommandBuilder,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
-  ChatInputCommandInteraction,
-  PermissionResolvable,
 } from 'discord.js';
-import type { BotClient } from './client';
 
-// Re-export so consumers can import from '../types'
-export type { BotClient } from './client';
+// import type { BotClient } from './client';
+
+// // Re-export so consumers can import from '../types'
+// export type { BotClient } from './client';
+
+/** Command category key used in config. */
+export type CommandCategory = 'user' | 'staff' | 'developer';
 
 /**
  * Flexible permission configuration for a command.
@@ -39,6 +46,26 @@ export const PERMISSION_LEVEL_MAP: Record<number, PermissionResolvable[]> = {
   2: ['Administrator'],
   3: [],
 };
+
+export interface BotCommand {
+  data:
+    | SlashCommandBuilder
+    | SlashCommandSubcommandsOnlyBuilder
+    | SlashCommandOptionsOnlyBuilder
+    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
+  category: CommandCategory;
+  permissionLevel?: number;
+  /**
+   * Pick how this command should be permission-checked at runtime.
+   * - config: integer levels from config.json
+   * - discord: native Discord permission flags from this command file
+   * - both: require both config level and Discord flags
+   */
+  permissionMode?: 'config' | 'discord' | 'both';
+  /** Discord permission flags checked at runtime when permissionMode uses discord. */
+  requiredDiscordPermissions?: PermissionResolvable[];
+  execute: (interaction: ChatInputCommandInteraction, client: BotClient) => Promise<void>;
+}
 
 /**
  * Checks whether a member satisfies the required permission config.
@@ -76,63 +103,81 @@ export function checkPermissions(
   }
 }
 
-/** Structure for a single slash command. */
-export interface BotCommand {
-  /** Category folder name (e.g. "general", "moderation"). */
-  category: string;
-  /** Slash command builder definition. */
-  data:
-    | SlashCommandBuilder
-    | SlashCommandOptionsOnlyBuilder
-    | SlashCommandSubcommandsOnlyBuilder;
-  /** Optional permission configuration. Leave undefined for everyone. */
-  permissions?: PermissionConfig;
-  /** Command execution handler. */
-  execute: (interaction: ChatInputCommandInteraction, client: BotClient) => Promise<void>;
-}
-
 /** Structure for a single event listener. */
-export interface BotEvent {
-  /** Discord event name (e.g. "ready", "interactionCreate"). */
-  name: string;
-  /** Whether the event should fire only once. */
+// export interface BotEvent {
+//   /** Discord event name (e.g. "ready", "interactionCreate"). */
+//   name: string;
+//   /** Whether the event should fire only once. */
+//   once?: boolean;
+//   /** Event handler – receives event args plus the client. */
+//   execute: (...args: unknown[]) => Promise<void> | void;
+// }
+export interface BotEvent<K extends keyof ClientEvents = keyof ClientEvents> {
+  name: K;
   once?: boolean;
-  /** Event handler – receives event args plus the client. */
-  execute: (...args: unknown[]) => Promise<void> | void;
+  execute: (client: BotClient, ...args: ClientEvents[K]) => Promise<void> | void;
 }
 
-/** Command category key used in config. */
-export type CommandCategory = 'general' | 'moderation' | 'admin' | 'utility' | string;
+export type AnyBotEvent = {
+  [K in keyof ClientEvents]: BotEvent<K>;
+}[keyof ClientEvents];
+
+export interface BotClient extends Client {
+  commands: Collection<string, BotCommand>;
+}
 
 /**
  * Bot configuration loaded from config.json at runtime.
- * Keeps non-secret settings separate from .env secrets.
+ * Secrets should stay in `.env`; this file is for shareable template settings.
  */
-export interface BotConfig {
+export interface AppConfig {
   /** Discord Gateway intents to enable on the client. */
   intents: string[];
   /** Discord partials to enable on the client. */
   partials: string[];
-  /** Guild ID for instant command registration (development only). Empty = global. */
-  devGuildId: string;
+  /** Add developer by user ID */
+  developers: string[];
+  bot: {
+    name: string;
+    maintenanceMode: boolean;
+    guildId: string;
+    presence: {
+      status: 'online' | 'idle' | 'dnd' | 'invisible';
+      activities: Array<{
+        name: string;
+        type: 'Playing' | 'Streaming' | 'Listening' | 'Watching' | 'Competing';
+      }>;
+    };
+  };
+  /** Embed colors and footer configurations */
+  embedColors: Record<string, string>;
+  embedFooter?: {
+    enabled: boolean;
+    textTemplate: string;
+    showTimestamp: boolean;
+  };
+  /** Guild Roles for staff and admin; ADD where applicable */
+  guild: {
+    roles: {
+      staff: string;
+      admin: string;
+    };
+  };
   /** Default cooldown in seconds between command uses. */
   cooldownDefault: number;
-  /** Bot presence configuration. */
-  presence: {
-    status: 'online' | 'idle' | 'dnd' | 'invisible';
-    activities: Array<{
-      name: string;
-      type: 'Playing' | 'Streaming' | 'Listening' | 'Watching' | 'Competing';
-    }>;
-  };
   /** Permission level mapping. */
   permissions: {
-    levels: Record<string, number>;
+    levels: {
+      user: number;
+      staff: number;
+      admin: number;
+      developer: number;
+    };
   };
   /** Command and category configuration. */
   commands: {
     disabled: string[];
-    categories: Record<string, { enabled: boolean }>;
+    categories: Record<CommandCategory, { enabled: boolean }>;
   };
   /** Default embed styles for common message types. */
   embedDefaults: Record<
@@ -143,7 +188,7 @@ export interface BotConfig {
     }
   >;
   /** Logging configuration. */
-  logging: {
+  logging?: {
     enabled: boolean;
     level: string;
     outputs: {
