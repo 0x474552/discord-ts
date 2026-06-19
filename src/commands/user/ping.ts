@@ -18,27 +18,31 @@ import { buildEmbed } from '../../utils/embed';
  *   - undefined        → no restrictions
  */
 const command: BotCommand = {
-  category: 'general',
+  category: 'user',
   data: new SlashCommandBuilder()
     .setName('ping')
     .setDescription('Check bot response speed and websocket latency.'),
   // permissions: { type: 'integer', level: 0 },  // uncomment to restrict
 
   async execute(interaction, client) {
-    const sent = await interaction.reply({ content: 'Pinging…', fetchReply: true });
-    const roundtrip = sent.createdTimestamp - interaction.createdTimestamp;
+    const sent = await interaction.reply({
+      content: 'Pinging...',
+      fetchReply: true,
+      flags: MessageFlags.Ephemeral,
+    });
+
+    const roundTripMs = sent.createdTimestamp - interaction.createdTimestamp;
 
     await interaction.editReply({
       content: '',
       embeds: [
         buildEmbed('success')
-          .setTitle('🏓 Pong!')
+          .setTitle('Pong')
           .addFields(
-            { name: 'Roundtrip', value: `${roundtrip}ms`, inline: true },
+            { name: 'Roundtrip', value: `${roundTripMs}ms`, inline: true },
             { name: 'WebSocket', value: `${client.ws.ping}ms`, inline: true },
           ),
       ],
-      options: { flags: MessageFlags.Ephemeral },
     });
   },
 };
