@@ -1,42 +1,35 @@
-import { EmbedBuilder } from 'discord.js';
-import { getColourInt } from './colours';
-import type { ColourName } from './colours';
+import { EmbedBuilder, type ColorResolvable } from 'discord.js';
+import { config } from '../config/ConfigManager';
 
-/**
- * Pre-configured embed builders for common use cases.
- * Use: buildEmbed('success').setTitle('...').setDescription('...')
- *
- * You can also create a custom embed with any colour name:
- *   customEmbed('teal').setTitle('My Title')
- */
+export type EmbedKind = 'primary' | 'success' | 'warning' | 'error' | 'info';
 
-type EmbedStyle = 'success' | 'error' | 'info' | 'warning';
-
-const styleConfig: Record<EmbedStyle, { colour: ColourName; defaultTitle: string }> = {
-  success: { colour: 'green', defaultTitle: '✅ Success' },
-  error: { colour: 'red', defaultTitle: '❌ Error' },
-  info: { colour: 'blue', defaultTitle: 'ℹ️ Info' },
-  warning: { colour: 'yellow', defaultTitle: '⚠️ Warning' },
-};
-
-/**
- * Creates a pre-styled embed for common message types.
- * @example buildEmbed('success').setDescription('Operation completed.')
- */
-export function buildEmbed(style: EmbedStyle): EmbedBuilder {
-  const config = styleConfig[style];
-  return new EmbedBuilder()
-    .setColor(getColourInt(config.colour))
-    .setTitle(config.defaultTitle)
-    .setTimestamp();
+export function formatString(template: string, variables: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(variables[key] ?? `{${key}}`));
 }
 
-/**
- * Creates a custom embed using any colour from the COLOUR_MAP.
- * @example customEmbed('pink').setTitle('Hello').setDescription('World')
- */
-export function customEmbed(colour: ColourName = 'blue'): EmbedBuilder {
-  return new EmbedBuilder()
-    .setColor(getColourInt(colour))
-    .setTimestamp();
+export function buildEmbed(kind: EmbedKind = 'primary'): EmbedBuilder {
+  // Fallback color for embedded message
+  const fallbackColor = config.embedColors.primary ?? '#5865F2';
+
+  // Resolve embed color from config.json
+  const color = (config.embedColors[kind] ?? fallbackColor) as ColorResolvable;
+  const embed = new EmbedBuilder().setColor(color);
+
+  if (config.embedFooter?.enabled !== false) {
+    const baseText = formatString(
+      // use config.json text template or default to Powered by DiscordBot
+      config.embedFooter?.textTemplate ?? 'Powered by {botName}', {
+        botName: config.bot.name,
+      }
+    );
+
+    // config.json show timestamp true or false
+    const footerText = config.embedFooter?.showTimestamp
+      ? `${baseText} | ${new Date().toLocaleString()}`
+      : baseText;
+
+    embed.setFooter({ text: footerText });
+  }
+
+  return embed;
 }
