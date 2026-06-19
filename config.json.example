@@ -1,0 +1,55 @@
+{
+  "intents": [
+    "Guilds",
+    "GuildMessages",
+    "MessageContent",
+    "GuildMembers",
+    "GuildMessageReactions"
+  ],
+  "partials": ["Message", "Channel", "Reaction"],
+  "devGuildId": "",
+  "cooldownDefault": 3,
+  "presence": {
+    "status": "online",
+    "activities": [
+      {
+        "name": "with discord.js",
+        "type": "Playing"
+      }
+    ]
+  },
+  "permissions": {
+    "levels": {
+      "0": 0,
+      "1": 1,
+      "2": 2,
+      "3": 3
+    }
+  },
+  "commands": {
+    "disabled": [],
+    "categories": {
+      "general": { "enabled": true },
+      "moderation": { "enabled": true },
+      "admin": { "enabled": true },
+      "utility": { "enabled": true }
+    }
+  },
+  "embedDefaults": {
+    "success": { "colour": "green", "defaultTitle": "✅ Success" },
+    "error": { "colour": "red", "defaultTitle": "❌ Error" },
+    "info": { "colour": "blue", "defaultTitle": "ℹ️ Info" },
+    "warning": { "colour": "yellow", "defaultTitle": "⚠️ Warning" }
+  },
+  "logging": {
+    "enabled": true,
+    "level": "info",
+    "outputs": {
+      "console": true,
+      "files": {
+        "combined": true,
+        "error": true
+      }
+    }
+  }
+}

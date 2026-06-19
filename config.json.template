@@ -1,0 +1,51 @@
+{
+  "intents": [
+    ""
+  ],
+  "partials": [
+    ""
+  ],
+  "devGuildId": "",
+  "cooldownDefault": 0,
+  "presence": {
+    "status": "online",
+    "activities": [
+      {
+        "name": "",
+        "type": "Playing"
+      }
+    ]
+  },
+  "permissions": {
+    "levels": {
+      "<key>": 0
+    }
+  },
+  "commands": {
+    "disabled": [
+      ""
+    ],
+    "categories": {
+      "<key>": {
+        "enabled": false
+      }
+    }
+  },
+  "embedDefaults": {
+    "<key>": {
+      "colour": "",
+      "defaultTitle": ""
+    }
+  },
+  "logging": {
+    "enabled": false,
+    "level": "",
+    "outputs": {
+      "console": false,
+      "files": {
+        "combined": false,
+        "error": false
+      }
+    }
+  }
+}
