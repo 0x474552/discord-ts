@@ -1,45 +1,77 @@
 {
-  "intents": [
-    "Guilds",
-    "GuildMessages",
-    "MessageContent",
-    "GuildMembers",
-    "GuildMessageReactions"
-  ],
-  "partials": ["Message", "Channel", "Reaction"],
-  "devGuildId": "",
-  "cooldownDefault": 3,
-  "presence": {
-    "status": "online",
-    "activities": [
-      {
-        "name": "with discord.js",
-        "type": "Playing"
-      }
-    ]
+  "intents": ["Guilds"],
+  "partials": [],
+  "developers": ["YOUR_DISCORD_USER_ID"],
+  "bot": {
+    "name": "DiscordTS Template",
+    "maintenanceMode": false,
+    "guildId": "YOUR_GUILD_ID",
+    "presence": {
+      "status": "online",
+      "activities": [
+        {
+          "name": "with slash commands",
+          "type": "Playing"
+        }
+      ]
+    }
   },
+  "embedColors": {
+    "primary": "#5865F2",
+    "success": "#57F287",
+    "warning": "#FEE75C",
+    "error": "#ED4245",
+    "info": "#5DADE2"
+  },
+  "embedFooter": {
+    "enabled": true,
+    "textTemplate": "Powered by {botName}",
+    "showTimestamp": false
+  },
+  "guild": {
+    "roles": {
+      "staff": "STAFF_ROLE_ID",
+      "admin": "ADMIN_ROLE_ID"
+    }
+  },
+  "cooldownDefault": 3,
   "permissions": {
     "levels": {
-      "0": 0,
-      "1": 1,
-      "2": 2,
-      "3": 3
+      "user": 0,
+      "staff": 1,
+      "admin": 2,
+      "developer": 3
     }
   },
   "commands": {
     "disabled": [],
     "categories": {
-      "general": { "enabled": true },
-      "moderation": { "enabled": true },
-      "admin": { "enabled": true },
-      "utility": { "enabled": true }
+      "user": { "enabled": true },
+      "staff": { "enabled": true },
+      "developer": { "enabled": true }
     }
   },
   "embedDefaults": {
-    "success": { "colour": "green", "defaultTitle": "✅ Success" },
-    "error": { "colour": "red", "defaultTitle": "❌ Error" },
-    "info": { "colour": "blue", "defaultTitle": "ℹ️ Info" },
-    "warning": { "colour": "yellow", "defaultTitle": "⚠️ Warning" }
+    "primary": {
+      "colour": "primary",
+      "defaultTitle": "Message"
+    },
+    "success": {
+      "colour": "success",
+      "defaultTitle": "Success"
+    },
+    "error": {
+      "colour": "error",
+      "defaultTitle": "Error"
+    },
+    "warning": {
+      "colour": "warning",
+      "defaultTitle": "Warning"
+    },
+    "info": {
+      "colour": "info",
+      "defaultTitle": "Info"
+    }
   },
   "logging": {
     "enabled": true,
@@ -47,8 +79,8 @@
     "outputs": {
       "console": true,
       "files": {
-        "combined": true,
-        "error": true
+        "combined": false,
+        "error": false
       }
     }
   }
