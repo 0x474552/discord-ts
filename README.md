@@ -1,8 +1,6 @@
 # Discord Bot Template
 
-This is a small Discord.js + TypeScript starter meant to be easy to extend.
-The runtime keeps command and event loading explicit so new projects stay easy
-to read, bundle, and debug.
+This is a Discord.js + TypeScript starter meant to be easy to extend and scale. Noting that commands and events are registered explicitly, and boilerplate codes are included for reference on common extension points.
 
 Feel free to fork and contribute to this repository if you think you can improve certain aspects of the files and codes that will ultimately benefit other people!
 
@@ -12,7 +10,7 @@ Feel free to fork and contribute to this repository if you think you can improve
 - Event registry in `src/events/index.ts`
 - Optional MySQL pool in `src/database/`
 - Shared embed helper in `src/utils/embed.ts`
-- Simple config loader for `config.json`
+- Config-driven intents, partials, presence, and permission levels in `config.json`
 - `.env`-only database configuration
 
 ## Project layout
@@ -24,6 +22,10 @@ Feel free to fork and contribute to this repository if you think you can improve
 - `src/handlers/EventHandler.ts` attaches event listeners
 - `src/handlers/interaction/CommandInteractionHandler.ts` performs permission checks
 - `src/utils/deploy-commands.ts` registers guild slash commands
+- `scripts/build.mjs` controls exactly which files are emitted to `dist/`, this is the structure currently (by-default)
+    > => `dist/utils/deploy-commands.js`<br>
+    > => `dist/index.js`
+- `*.boilerplate.ts` files are reference-only examples and not loaded automatically
 
 ## Setup
 
@@ -33,18 +35,26 @@ Feel free to fork and contribute to this repository if you think you can improve
 npm install
 ```
 
-2. Copy `.env.example` to `.env` and fill in:
+2. Create your runtime config file.
+
+```bash
+npm run setup-config
+```
+
+3. Copy `.env.example` to `.env` and fill in:
 
 - `DISCORD_TOKEN`
 - `CLIENT_ID`
-- `GUILD_ID`
+- **NOTE:** <br>`GUILD_ID` is optional if you prefer to keep slash-command registration tied to
+`config.json`. If both exist, `.env` wins.
 
-3. Update `config.json` with your project-specific values:
+4. Update `config.json` with your project-specific values:
 
 - `developers`
 - `bot.guildId`
 - `guild.roles.staff`
 - `guild.roles.admin`
+- `intents` and `partials` if your bot needs more gateway features
 
 ## Database setup
 
@@ -68,7 +78,7 @@ If you do not need a database yet, leave `DB_ENABLED=false`.
 ## Commands included
 
 - `/ping` for regular users
-- `/embed` for staff/admin-style usage with Discord permission checks
+- `/embed` for staff or moderators using Discord permission checks
 - `/debug` for developers
 
 ## Permission model
@@ -88,7 +98,10 @@ The default config levels are:
 ## Scripts
 
 ```bash
+npm run setup-config
 npm run dev
+npm run typecheck
+npm run lint
 npm run build
 npm run start
 npm run register
@@ -101,10 +114,12 @@ npm run generate-config
 - Add new events to `src/events/index.ts`
 - Keep secrets in `.env`
 - Keep reusable project behavior in `config.json`
+- Edit `scripts/build.mjs` if you want `dist/` to emit more than `index.js` and `utils/deploy-commands.js`
+- Copy the `*.boilerplate.ts` files when you want examples, but do not expect them to be loaded automatically
 
 ## Issues
 
-- Should you come across an issue or feel like certain part of the codes or files have a better implementation, do not hesitate to open a new issue!
+- If you find a bug or see a clearer way to teach a pattern, open an issue or a pull request.
 
 The source includes extra inline comments in the runtime-critical files so this
 can double as a learning template, not just a starter zip.

@@ -5,12 +5,14 @@
   "description": "A Discord.js bot built with TypeScript",
   "main": "dist/index.js",
   "scripts": {
+    "setup-config": "node scripts/setup-config.mjs",
     "dev": "tsx watch src/index.ts",
     "build": "node scripts/build.mjs",
     "start": "node dist/index.js",
     "register": "tsx src/utils/deploy-commands.ts",
     "generate-config": "node scripts/generate-config-template.mjs",
-    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.mjs",
     "format": "prettier --write \"src/**/*.ts\""
   },
   "engines": {
