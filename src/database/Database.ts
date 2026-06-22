@@ -1,4 +1,4 @@
-import mysql, { type Pool, type PoolOptions, type RowDataPacket } from 'mysql2/promise';
+import mysql, { type Pool, type PoolOptions } from 'mysql2/promise';
 import { log } from '../utils/logger';
 
 export interface DatabaseConnectionOptions {
@@ -62,7 +62,7 @@ export class Database {
     const connection = await this.pool.getConnection();
     await connection.ping();
     connection.release();
-    
+
     log.success(`Connected to database pool "${this.name}".`, 'database');
   }
 
@@ -80,8 +80,7 @@ export class Database {
     }
   }
 
-  // async query<T extends RowDataPacket[]>(sql: string, params: unknown[] = []): Promise<T> {
-  async query<T = any>(sql: string, params: unknown[] = []): Promise<T[]> {
+  async query<T = unknown>(sql: string, params: unknown[] = []): Promise<T[]> {
     if (!this.pool) {
       throw new Error(`Database "${this.name}" is not connected.`);
     }
@@ -91,11 +90,8 @@ export class Database {
       return rows as T[];
     } catch (err) {
       // add query error logging
-      log.error(`Query failed in database "${this.name}"`, 'database', {
-        sql,
-        params,
-        err
-      });
+      const detail = JSON.stringify({ sql, params, error: (err as Error).message });
+      log.error(`Query failed in database "${this.name}": ${detail}`, 'database');
       throw err;
     }
   }
@@ -103,7 +99,7 @@ export class Database {
   async close(): Promise<void> {
     if (!this.pool) return;
 
-    await this.pool.end(); 
+    await this.pool.end();
 
     this.pool = null;
 
