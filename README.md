@@ -4,6 +4,8 @@ This is a small Discord.js + TypeScript starter meant to be easy to extend.
 The runtime keeps command and event loading explicit so new projects stay easy
 to read, bundle, and debug.
 
+Feel free to fork and contribute to this repository if you think you can improve certain aspects of the files and codes that will ultimately benefit other people!
+
 ## What this template includes
 
 - Slash command registry in `src/commands/index.ts`
@@ -99,6 +101,10 @@ npm run generate-config
 - Add new events to `src/events/index.ts`
 - Keep secrets in `.env`
 - Keep reusable project behavior in `config.json`
+
+## Issues
+
+- Should you come across an issue or feel like certain part of the codes or files have a better implementation, do not hesitate to open a new issue!
 
 The source includes extra inline comments in the runtime-critical files so this
 can double as a learning template, not just a starter zip.
