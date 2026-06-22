@@ -14,6 +14,6 @@ export async function checkDatabaseBoilerplate(): Promise<boolean> {
     return false;
   }
 
-  const rows = await mainDb.query<HealthRow[]>('SELECT 1 AS ok');
+  const rows = await mainDb.query<HealthRow>('SELECT 1 AS ok');
   return rows[0]?.ok === 1;
 }
