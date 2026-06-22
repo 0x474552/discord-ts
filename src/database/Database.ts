@@ -16,6 +16,7 @@ export interface DatabaseConnectionOptions {
  */
 export class Database {
   private pool: Pool | null = null;
+  private connecting: Promise<void> | null = null;
 
   constructor(
     private readonly name: string,
@@ -27,6 +28,18 @@ export class Database {
       return;
     }
 
+    // Prevent concurrent connect() calls
+    if (this.connecting) {
+      return this.connecting;
+    }
+
+    this.connecting = this._connect();
+    await this.connecting;
+    this.connecting = null;
+  }
+
+  // move original connect logic here
+  private async _connect(): Promise<void> {
     const poolOptions: PoolOptions = {
       host: this.options.host,
       port: this.options.port,
@@ -36,6 +49,11 @@ export class Database {
       connectionLimit: this.options.connectionLimit ?? 10,
       waitForConnections: true,
       queueLimit: 0,
+
+      // optional additions
+      connectTimeout: 10_000,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
     };
 
     // A pooled connection is a safer default than a single shared connection
@@ -44,6 +62,7 @@ export class Database {
     const connection = await this.pool.getConnection();
     await connection.ping();
     connection.release();
+    
     log.success(`Connected to database pool "${this.name}".`, 'database');
   }
 
@@ -53,28 +72,41 @@ export class Database {
     }
 
     try {
-      const connection = await this.pool.getConnection();
-      await connection.ping();
-      connection.release();
+      // simplify this healthcheck
+      await this.pool.query('SELECT 1');
       return true;
     } catch {
       return false;
     }
   }
 
-  async query<T extends RowDataPacket[]>(sql: string, params: unknown[] = []): Promise<T> {
+  // async query<T extends RowDataPacket[]>(sql: string, params: unknown[] = []): Promise<T> {
+  async query<T = any>(sql: string, params: unknown[] = []): Promise<T[]> {
     if (!this.pool) {
       throw new Error(`Database "${this.name}" is not connected.`);
     }
 
-    // Keep starter queries parameterized by default.
-    const [rows] = await this.pool.query<T>(sql, params);
-    return rows;
+    try {
+      const [rows] = await this.pool.query(sql, params);
+      return rows as T[];
+    } catch (err) {
+      // add query error logging
+      log.error(`Query failed in database "${this.name}"`, 'database', {
+        sql,
+        params,
+        err
+      });
+      throw err;
+    }
   }
 
   async close(): Promise<void> {
-    await this.pool?.end();
+    if (!this.pool) return;
+
+    await this.pool.end(); 
+
     this.pool = null;
-    log.info(`Closed database pool "${this.name}".`, 'database');
+
+    log.info(`Closed database pool "${this.name}"`, 'database');
   }
 }
