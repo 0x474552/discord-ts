@@ -27,13 +27,10 @@ const event: BotEvent<typeof Events.ClientReady> = {
     // add explicit validation + logging
     const activityType = ActivityType[firstActivity.type as keyof typeof ActivityType];
     if (activityType === undefined) {
-      log.error(
-        `Invalid activity type in config: ${firstActivity.type}`,
-        'ready',
-      );
+      log.error(`Invalid activity type in config: ${firstActivity.type}`, 'ready');
       return;
     }
-    
+
     // Keep one simple presence entry by default. Projects that need rotating
     // presence can extend this event later.
     client.user.setPresence({

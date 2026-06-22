@@ -18,15 +18,18 @@ export async function loadEvents(client: BotClient): Promise<void> {
     // We keep strong typing in each event module, then widen slightly here so
     // one generic runtime loader can attach every event shape.
     const typedEvent = event as AnyBotEvent as RuntimeEvent;
-    const handler = (...args: unknown[]) =>
-      Promise.resolve(typedEvent.execute(client, ...args)).catch((error: Error) =>
+
+    // Make handler explicitly match client.on(), so "...args: any[]" can be removed
+    const handler = (...args: unknown[]): void => {
+      void Promise.resolve(typedEvent.execute(client, ...args)).catch((error: Error) =>
         log.error(`${typedEvent.name}: ${error.message}`, 'events'),
       );
+    };
 
     if (typedEvent.once) {
-      client.once(typedEvent.name, handler as (...args: any[]) => void);
+      client.once(typedEvent.name, handler);
     } else {
-      client.on(typedEvent.name, handler as (...args: any[]) => void);
+      client.on(typedEvent.name, handler);
     }
 
     log.success(`Loaded event: ${typedEvent.name}`, 'events');

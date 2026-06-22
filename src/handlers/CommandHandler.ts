@@ -32,7 +32,13 @@ export async function loadCommands(client: BotClient): Promise<BotCommand[]> {
 export async function registerSlashCommands(commands: BotCommand[]): Promise<void> {
   const token = configManager.env('DISCORD_TOKEN', true);
   const clientId = configManager.env('CLIENT_ID', true);
-  const guildId = configManager.env('GUILD_ID', true);
+  const guildId = configManager.env('GUILD_ID') || configManager.config.bot.guildId;
+
+  if (!guildId) {
+    throw new Error(
+      'Set GUILD_ID in .env or bot.guildId in config.json before registering commands.',
+    );
+  }
 
   const rest = new REST({ version: '10' }).setToken(token);
   const body = commands.map((command) => command.data.toJSON());
