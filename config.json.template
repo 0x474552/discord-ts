@@ -34,7 +34,6 @@
       "admin": "ADMIN_ROLE_ID"
     }
   },
-  "cooldownDefault": 3,
   "permissions": {
     "levels": {
       "user": 0,
@@ -51,37 +50,11 @@
       "developer": { "enabled": true }
     }
   },
-  "embedDefaults": {
-    "primary": {
-      "colour": "primary",
-      "defaultTitle": "Message"
-    },
-    "success": {
-      "colour": "success",
-      "defaultTitle": "Success"
-    },
-    "error": {
-      "colour": "error",
-      "defaultTitle": "Error"
-    },
-    "warning": {
-      "colour": "warning",
-      "defaultTitle": "Warning"
-    },
-    "info": {
-      "colour": "info",
-      "defaultTitle": "Info"
-    }
-  },
   "logging": {
     "enabled": true,
     "level": "info",
     "outputs": {
-      "console": true,
-      "files": {
-        "combined": false,
-        "error": false
-      }
+      "console": true
     }
   }
 }
