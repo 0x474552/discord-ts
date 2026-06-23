@@ -14,12 +14,12 @@ const command: BotCommand = {
   requiredDiscordPermissions: [PermissionFlagsBits.ManageMessages],
   data: new SlashCommandBuilder()
     .setName('embed')
-    .setDescription('Send a template embed to the current channel or a chosen text channel.')
+    .setDescription('Send a template embed.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addStringOption((option) =>
       option
         .setName('message')
-        .setDescription('The main embed message.')
+        .setDescription('The embed message.')
         .setRequired(true)
         .setMaxLength(4000),
     )
@@ -29,9 +29,10 @@ const command: BotCommand = {
     .addChannelOption((option) =>
       option
         .setName('channel')
-        .setDescription('Optional target text channel. Defaults to the current channel.')
+        .setDescription('Target text channel. Defaults to the current channel.')
         .addChannelTypes(ChannelType.GuildText),
     ),
+
   async execute(interaction) {
     if (!interaction.inCachedGuild()) {
       await interaction.reply({
@@ -41,31 +42,22 @@ const command: BotCommand = {
       return;
     }
 
-    const targetChannelOption = interaction.options.getChannel('channel');
+    // Fall back to the current channel when none is specified.
     const targetChannel =
-      targetChannelOption?.type === ChannelType.GuildText
-        ? (targetChannelOption as TextChannel)
-        : interaction.channel?.type === ChannelType.GuildText
-          ? (interaction.channel as TextChannel)
-          : null;
+      (interaction.options.getChannel('channel') as TextChannel | null) ??
+      (interaction.channel as TextChannel);
 
-    if (!targetChannel) {
-      await interaction.reply({
-        embeds: [buildEmbed('error').setDescription('Please choose a valid text channel.')],
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
+    const embed = buildEmbed('primary').setDescription(
+      interaction.options.getString('message', true),
+    );
 
-    const message = interaction.options.getString('message', true);
     const title = interaction.options.getString('title');
+    if (title) embed.setTitle(title);
 
-    const embed = buildEmbed('primary').setDescription(message);
-    if (title) {
-      embed.setTitle(title);
-    }
+    await targetChannel.send({
+      embeds: [embed],
+    });
 
-    await targetChannel.send({ embeds: [embed] });
     await interaction.reply({
       embeds: [buildEmbed('success').setDescription(`Embed sent to <#${targetChannel.id}>.`)],
       flags: MessageFlags.Ephemeral,
