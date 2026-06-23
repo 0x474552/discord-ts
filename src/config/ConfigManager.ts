@@ -1,12 +1,60 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import type { AppConfig } from '../types';
+import type {
+  AppConfig,
+  MemberAutoRoleConfig,
+  MemberEventsConfig,
+  MemberMessageConfig,
+  WelcomeMemberMessageConfig,
+} from '../types';
 
 dotenv.config();
 
 function resolveConfigPath(): string {
   return path.resolve(process.cwd(), 'config.json');
+}
+
+type RawMemberEventsConfig = Partial<{
+  autorole: Partial<MemberAutoRoleConfig>;
+  welcome: Partial<WelcomeMemberMessageConfig>;
+  leave: Partial<MemberMessageConfig>;
+}>;
+
+type RawAppConfig = Omit<AppConfig, 'memberEvents'> & {
+  memberEvents?: RawMemberEventsConfig;
+};
+
+function normalizeMemberEvents(
+  memberEvents: RawMemberEventsConfig | undefined,
+): MemberEventsConfig {
+  return {
+    autorole: {
+      enabled: memberEvents?.autorole?.enabled ?? false,
+      botRoleIds: memberEvents?.autorole?.botRoleIds ?? [],
+      humanRoleIds: memberEvents?.autorole?.humanRoleIds ?? [],
+    },
+    welcome: {
+      enabled: memberEvents?.welcome?.enabled ?? false,
+      channelId: memberEvents?.welcome?.channelId ?? '',
+      message:
+        memberEvents?.welcome?.message ??
+        'Welcome {userMention} to {guildName}! You are member #{memberCount}.',
+      useEmbed: memberEvents?.welcome?.useEmbed ?? true,
+      title: memberEvents?.welcome?.title ?? 'Welcome!',
+      dmEnabled: memberEvents?.welcome?.dmEnabled ?? false,
+      dmMessage: memberEvents?.welcome?.dmMessage ?? 'Welcome to {guildName}, {username}!',
+    },
+    leave: {
+      enabled: memberEvents?.leave?.enabled ?? false,
+      channelId: memberEvents?.leave?.channelId ?? '',
+      message:
+        memberEvents?.leave?.message ??
+        '{userTag} left {guildName}. We are now at {memberCount} members.',
+      useEmbed: memberEvents?.leave?.useEmbed ?? true,
+      title: memberEvents?.leave?.title ?? 'Member Left',
+    },
+  };
 }
 
 class ConfigManager {
@@ -26,7 +74,12 @@ class ConfigManager {
     // Keep runtime config in one predictable place so new projects have a
     // single non-secret file to customize.
     const raw = fs.readFileSync(this.configPath, 'utf8');
-    return JSON.parse(raw) as AppConfig;
+    const parsed = JSON.parse(raw) as RawAppConfig;
+
+    return {
+      ...parsed,
+      memberEvents: normalizeMemberEvents(parsed.memberEvents),
+    };
   }
 
   reload(): void {
