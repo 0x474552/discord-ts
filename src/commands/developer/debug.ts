@@ -1,13 +1,15 @@
 import { MessageFlags, SlashCommandBuilder, version as discordJsVersion } from 'discord.js';
 import type { BotCommand } from '../../types';
-import { isDatabaseEnabled, mainDb } from '../../database';
 import { buildEmbed } from '../../utils/embed';
+// Remove db related imports
+// import { isDatabaseEnabled, mainDb } from '../../database';
 
 function formatUptime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const days = Math.floor(totalSeconds / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
+
   return `${days}d ${hours}h ${minutes}m`;
 }
 
@@ -28,18 +30,20 @@ const command: BotCommand = {
   category: 'developer',
   permissionLevel: 3,
   permissionMode: 'config',
-  data: new SlashCommandBuilder()
-    .setName('debug')
-    .setDescription('Show a small runtime diagnostic panel for developers.'),
+  data: new SlashCommandBuilder().setName('debug').setDescription('Show runtime diagnostics.'),  // simple description will do
   async execute(interaction, client) {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({
+      flags: MessageFlags.Ephemeral,
+    });
 
     const memoryUsage = process.memoryUsage();
-    const dbStatus = isDatabaseEnabled()
-      ? (await mainDb?.healthy())
-        ? 'connected'
-        : 'down'
-      : 'disabled';
+
+    // Remove db related codes
+    // const dbStatus = isDatabaseEnabled()
+    //   ? (await mainDb?.healthy())
+    //     ? 'connected'
+    //     : 'down'
+    //   : 'disabled';
 
     await interaction.editReply({
       embeds: [
@@ -53,7 +57,8 @@ const command: BotCommand = {
             { name: 'Commands', value: `${client.commands.size}`, inline: true },
             { name: 'Node', value: process.version, inline: true },
             { name: 'discord.js', value: discordJsVersion, inline: true },
-            { name: 'Database', value: dbStatus, inline: true },
+            // Remove db related codes
+            // { name: 'Database', value: dbStatus, inline: true },
             { name: 'RSS', value: formatBytes(memoryUsage.rss), inline: true },
             { name: 'Heap Used', value: formatBytes(memoryUsage.heapUsed), inline: true },
           ),
