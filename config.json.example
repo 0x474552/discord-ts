@@ -1,5 +1,5 @@
 {
-  "intents": ["Guilds"],
+  "intents": ["Guilds", "GuildMembers"],
   "partials": [],
   "developers": ["YOUR_DISCORD_USER_ID"],
   "bot": {
@@ -32,6 +32,29 @@
     "roles": {
       "staff": "STAFF_ROLE_ID",
       "admin": "ADMIN_ROLE_ID"
+    }
+  },
+  "memberEvents": {
+    "autorole": {
+      "enabled": false,
+      "botRoleIds": [],
+      "humanRoleIds": []
+    },
+    "welcome": {
+      "enabled": false,
+      "channelId": "WELCOME_CHANNEL_ID",
+      "message": "Welcome {userMention} to {guildName}! You are member #{memberCount}.",
+      "useEmbed": true,
+      "title": "Welcome!",
+      "dmEnabled": false,
+      "dmMessage": "Welcome to {guildName}, {username}!"
+    },
+    "leave": {
+      "enabled": false,
+      "channelId": "LEAVE_CHANNEL_ID",
+      "message": "{userTag} left {guildName}. We are now at {memberCount} members.",
+      "useEmbed": true,
+      "title": "Member Left"
     }
   },
   "permissions": {

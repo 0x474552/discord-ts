@@ -10,6 +10,7 @@ Feel free to fork and contribute to this repository if you think you can improve
 - Event registry in `src/events/index.ts`
 - Optional MySQL pool in `src/database/`
 - Shared embed helper in `src/utils/embed.ts`
+- Generic member join/leave helpers in `src/utils/memberEvents.ts`
 - Config-driven intents, partials, presence, and permission levels in `config.json`
 - `.env`-only database configuration
 
@@ -20,6 +21,7 @@ Feel free to fork and contribute to this repository if you think you can improve
 - `src/database/index.ts` builds the optional database connection from `.env`
 - `src/handlers/CommandHandler.ts` loads commands and registers slash commands
 - `src/handlers/EventHandler.ts` attaches event listeners
+- `src/utils/memberEvents.ts` centralizes join/leave message and autorole helpers
 - `src/handlers/interaction/CommandInteractionHandler.ts` performs permission checks
 - `src/utils/deploy-commands.ts` registers guild slash commands
 - `scripts/build.mjs` controls exactly which files are emitted to `dist/`, this is the structure currently (by-default)
@@ -55,6 +57,10 @@ npm run setup-config
 - `guild.roles.staff`
 - `guild.roles.admin`
 - `intents` and `partials` if your bot needs more gateway features
+- `memberEvents.*` if you want welcome messages, leave messages, or autoroles
+
+`GuildMembers` is enabled by default in the example config because Discord does not emit
+member join/leave events without that intent.
 
 ## Database setup
 
@@ -114,6 +120,9 @@ npm run generate-config
 - Add new events to `src/events/index.ts`
 - Keep secrets in `.env`
 - Keep reusable project behavior in `config.json`
+- The member event placeholders are `{userMention}`, `{username}`, `{userTag}`, `{guildName}`, and `{memberCount}`
+- Member join/leave logic supports two clean patterns: keep shared behavior in `src/utils/memberEvents.ts` for reuse, or move that logic directly back into `src/events/guildMemberAdd.ts` and `src/events/guildMemberRemove.ts` if you prefer each event to own everything in one file
+- If you need more onboarding or offboarding steps, grow `src/events/guildMemberAdd.ts`, `src/events/guildMemberRemove.ts`, or `src/utils/memberEvents.ts` instead of cramming everything into one send call
 - Edit `scripts/build.mjs` if you want `dist/` to emit more than `index.js` and `utils/deploy-commands.js`
 - Copy the `*.boilerplate.ts` files when you want examples, but do not expect them to be loaded automatically
 
