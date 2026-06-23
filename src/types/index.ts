@@ -112,6 +112,31 @@ export interface BotClient extends Client {
   commands: Collection<string, BotCommand>;
 }
 
+export interface MemberAutoRoleConfig {
+  enabled: boolean;
+  botRoleIds: string[];
+  humanRoleIds: string[];
+}
+
+export interface MemberMessageConfig {
+  enabled: boolean;
+  channelId: string;
+  message: string;
+  useEmbed: boolean;
+  title?: string;
+}
+
+export interface WelcomeMemberMessageConfig extends MemberMessageConfig {
+  dmEnabled: boolean;
+  dmMessage: string;
+}
+
+export interface MemberEventsConfig {
+  autorole: MemberAutoRoleConfig;
+  welcome: WelcomeMemberMessageConfig;
+  leave: MemberMessageConfig;
+}
+
 /**
  * Bot configuration loaded from config.json at runtime.
  * Secrets should stay in `.env`; this file is for shareable template settings.
@@ -149,6 +174,8 @@ export interface AppConfig {
       admin: string;
     };
   };
+  /** Join/leave automation normalized during config load for simple runtime reads. */
+  memberEvents: MemberEventsConfig;
   /** Permission level mapping. */
   permissions: {
     levels: {
